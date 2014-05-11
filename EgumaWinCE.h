@@ -1,0 +1,2 @@
+extern "C" __declspec(dllexport) bool GetBalance(wchar_t* apiKey, wchar_t* code, wchar_t* codeOut, bool& isRedeemable, int& balanceInCents, int& totalAmountInCents, wchar_t* messageOut, wchar_t* error);
+extern "C" __declspec(dllexport) bool Hello();
