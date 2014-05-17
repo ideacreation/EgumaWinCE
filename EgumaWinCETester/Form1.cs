@@ -9,13 +9,30 @@ namespace EgumaCppLibTester
 {
 	public class Form1 : System.Windows.Forms.Form
 	{
-	
+		// old with wide chars
+		//[DllImport("Eguma.dll")]
+		//public static extern bool GetBalance(string apiKey, string code, char[] codeOut, ref bool isRedeemable, ref Int32 balanceInCents, ref Int32 totalAmountInCents, char[] messageOut, char[] error);
+
 		[DllImport("Eguma.dll")]
-		public static extern bool GetBalance(string apiKey, string code, char[] codeOut, ref bool isRedeemable, ref Int32 balanceInCents, ref Int32 totalAmountInCents, char[] messageOut, char[] error);
+		public static extern bool GetBalance(byte[] apiKey, byte[] code, byte[] codeOut, out bool isRedeemable, out Int32 balanceInCents, out Int32 totalAmountInCents, byte[] messageOut, byte[] error);
 
 		[DllImport("Eguma.dll")]
 		public static extern bool Hello();
 
+		[DllImport("Eguma.dll")]
+		public static extern void TestLogOnly();
+
+		[DllImport("Eguma.dll", CharSet=CharSet.Auto)]
+		public static extern void TestLogStringParam(byte[] text); // TestReturnStringAsParam(char* result)
+
+		
+		[DllImport("Eguma.dll", CharSet=CharSet.Auto)]
+		public static extern void TestReturnStringAsParam(byte[] result);
+
+		[DllImport("Eguma.dll", CharSet=CharSet.Auto)]
+		public static extern void TestReturnIntAsParam(out int result);
+
+		
 
 		private System.Windows.Forms.Button button2;
 		private System.Windows.Forms.Label labelCodeOut;
@@ -29,6 +46,10 @@ namespace EgumaCppLibTester
 		private System.Windows.Forms.Label labelTotalAmount;
 		private System.Windows.Forms.Label labelXX;
 		private System.Windows.Forms.Button button3;
+		private System.Windows.Forms.Button button4;
+		private System.Windows.Forms.Button button5;
+		private System.Windows.Forms.Button button6;
+		private System.Windows.Forms.Button button7;
 
 
 
@@ -72,6 +93,10 @@ namespace EgumaCppLibTester
 			this.labelMessage = new System.Windows.Forms.Label();
 			this.label6 = new System.Windows.Forms.Label();
 			this.button3 = new System.Windows.Forms.Button();
+			this.button4 = new System.Windows.Forms.Button();
+			this.button5 = new System.Windows.Forms.Button();
+			this.button6 = new System.Windows.Forms.Button();
+			this.button7 = new System.Windows.Forms.Button();
 			// 
 			// button1
 			// 
@@ -82,8 +107,8 @@ namespace EgumaCppLibTester
 			// 
 			// button2
 			// 
-			this.button2.Location = new System.Drawing.Point(128, 280);
-			this.button2.Size = new System.Drawing.Size(200, 80);
+			this.button2.Location = new System.Drawing.Point(16, 352);
+			this.button2.Size = new System.Drawing.Size(176, 64);
 			this.button2.Text = "Close";
 			this.button2.Click += new System.EventHandler(this.button2_Click);
 			// 
@@ -149,8 +174,44 @@ namespace EgumaCppLibTester
 			this.button3.Text = "Hello";
 			this.button3.Click += new System.EventHandler(this.button3_Click);
 			// 
+			// button4
+			// 
+			this.button4.Location = new System.Drawing.Point(16, 256);
+			this.button4.Size = new System.Drawing.Size(96, 32);
+			this.button4.Text = "TestLogOnly";
+			this.button4.Click += new System.EventHandler(this.button4_Click);
+			// 
+			// button5
+			// 
+			this.button5.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
+			this.button5.Location = new System.Drawing.Point(120, 256);
+			this.button5.Size = new System.Drawing.Size(144, 32);
+			this.button5.Text = "TestLogStringParam";
+			this.button5.Click += new System.EventHandler(this.button5_Click);
+			// 
+			// button6
+			// 
+			this.button6.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
+			this.button6.Location = new System.Drawing.Point(272, 256);
+			this.button6.Size = new System.Drawing.Size(176, 32);
+			this.button6.Text = "TestReturnStringAsParam";
+			this.button6.Click += new System.EventHandler(this.button6_Click);
+			// 
+			// button7
+			// 
+			this.button7.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
+			this.button7.Location = new System.Drawing.Point(456, 256);
+			this.button7.Size = new System.Drawing.Size(176, 32);
+			this.button7.Text = "TestReturnIntAsParam";
+			this.button7.Click += new System.EventHandler(this.button7_Click);
+			// 
 			// Form1
 			// 
+			this.ClientSize = new System.Drawing.Size(866, 479);
+			this.Controls.Add(this.button7);
+			this.Controls.Add(this.button6);
+			this.Controls.Add(this.button5);
+			this.Controls.Add(this.button4);
 			this.Controls.Add(this.button3);
 			this.Controls.Add(this.labelMessage);
 			this.Controls.Add(this.label6);
@@ -180,20 +241,29 @@ namespace EgumaCppLibTester
 
 		private void button1_Click(object sender, System.EventArgs e)
 		{
-			int balanceInCents = 1;
-			int totalAmount = 0;
-			char[] codeOut = new char[32];
-			char [] message = new char[1024];
-			char[] error = new char[1024];
-			bool isRedeemable = false;
+			int balanceInCents;
+			int totalAmount;
+			byte[] codeOut = new byte[32];
+			byte [] message = new byte[1024];
+			byte[] error = new byte[1024];
+			bool isRedeemable;
 
-			GetBalance("510e32c594d84816a4af9df0", "2QH3-QTDM-28N6", codeOut, ref isRedeemable, ref balanceInCents, ref totalAmount, message, error);
+			GetBalance(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
+					   System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6"),
+					   codeOut,
+					   out isRedeemable,
+					   out balanceInCents,
+					   out totalAmount,
+					   message,
+					   error);
 
 			labelIsRedeemable.Text = isRedeemable ? "true" : "false";
-			labelCodeOut.Text = new String(codeOut);
+			labelCodeOut.Text = System.Text.Encoding.ASCII.GetString(codeOut, 0, codeOut.Length);
 			labelBalance.Text = balanceInCents.ToString();
 			labelTotalAmount.Text = totalAmount.ToString();
-			labelMessage.Text = new string(message);
+			labelMessage.Text = System.Text.Encoding.ASCII.GetString(message, 0, message.Length);
+
+			MessageBox.Show("OK! Check out the file GetBalance.txt in the root directory");
 		}
 
 		private void button2_Click(object sender, System.EventArgs e)
@@ -204,9 +274,40 @@ namespace EgumaCppLibTester
 		private void button3_Click(object sender, System.EventArgs e)
 		{
 			if (Hello())
-				MessageBox.Show("OK");
+				MessageBox.Show("OK! Check out the file Hello.txt in the root directory");
 			else
-				MessageBox.Show("something went wrong...");
+				MessageBox.Show("something went wrong...Check out the file Hello.txt in the root directory");
+		}
+
+		private void button4_Click(object sender, System.EventArgs e)
+		{
+			TestLogOnly();
+			MessageBox.Show("Check out the file TestLogOnly.txt in the root directory");
+		}
+
+		private void button5_Click(object sender, System.EventArgs e)
+		{
+			TestLogStringParam(System.Text.Encoding.ASCII.GetBytes("Hello World!"));
+
+			MessageBox.Show("Check out the file TestLogStringParam.txt in the root directory");
+		}
+
+		private void button6_Click(object sender, System.EventArgs e)
+		{
+			byte[] result = new byte[124];
+			TestReturnStringAsParam(result);
+			
+			string text = System.Text.Encoding.ASCII.GetString(result, 0, result.Length);
+			MessageBox.Show(text);
+		}
+
+		private void button7_Click(object sender, System.EventArgs e)
+		{
+			int result;
+
+			TestReturnIntAsParam(out result);
+
+			MessageBox.Show(string.Format("{0}", result));
 		}
 	}
 }

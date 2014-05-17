@@ -97,44 +97,63 @@ int GetNumber(const std::string& json, const std::string& key)
 	return atoi(numberAsString.c_str());
 }
 
-void SetErrorMessage(wchar_t* error, wchar_t* message)
+void SetErrorMessage(char* error, char* message)
 {
 	if (error == NULL)
 		return;
 
-	wsprintf(error, _T("%s"), message);
+	sprintf(error, "%s", message);
 }
 
-bool GetBalance(wchar_t* apiKey, wchar_t* code, wchar_t* codeOut, bool& isRedeemable, int& balanceInCents, int& totalAmountInCents, wchar_t* messageOut, wchar_t* error)
+void WriteLog(FILE* f, char* text)
 {
-	HINTERNET hIntSession = InternetOpen(_T("HTTPGET"),INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
+	fprintf(f, "%s\n", text);
+	fflush(f);
+}
+
+bool GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable, int* balanceInCents, int* totalAmountInCents, char* messageOut, char* error)
+{
+	FILE *f = fopen("GetBalance.txt", "w");
+
+	fprintf(f, "API-Key:%s\n", apiKey);
+	fprintf(f, "Code:%s\n", code);
+	fflush(f);
+
+
+	HINTERNET hIntSession = InternetOpenA("HTTPGET",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
 	
 	if (hIntSession == NULL)
 	{
-		SetErrorMessage(error, _T("InternetOpen() failed!"));
+		SetErrorMessage(error, "InternetOpen() failed!");
+		WriteLog(f, "InternetOpenA() failed");
 		return false;
 	}
+
+	WriteLog(f, "InternetOpenA() succeeded");
 	
 
-	HINTERNET hHttpSession = InternetConnect(hIntSession, _T("api.e-guma.ch"),INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
+	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
+
+	WriteLog(f, "InternetConnectA() succeeded");
 
 
-	// v1/vouchers/2QH3-QTDM-28N6/balance.json?apikey=510e32c594d84816a4af9df0
-	std::wstring url = wstring(_T("v1/vouchers/")) + wstring(code) + wstring(_T("/balance.json?apikey=")) + wstring(apiKey);
+	std::string url = string("v1/vouchers/") + string(code) + string("/balance.json?apikey=") + string(apiKey);
+    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "GET", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
+
+	WriteLog(f, "HttpOpenRequestA() succeeded");
 	
-
-    HINTERNET hHttpRequest = HttpOpenRequest(hHttpSession, _T("GET"), url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	
-    TCHAR* szHeaders = _T("Content-Type: application/json");
+    CHAR* szHeaders = "Content-Type: application/json";
     CHAR szReq[1024] = "";
-    if( !HttpSendRequest(hHttpRequest, szHeaders, _tcslen(szHeaders), szReq, strlen(szReq))) {
+    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
 		DWORD dwErr = GetLastError();
       
-		SetErrorMessage(error, _T("HttpSendRequest() failed!"));
+		SetErrorMessage(error, "HttpSendRequest() failed!");
+		WriteLog(f, "HttpSendRequestA() failded");
 
 		return false;
     }
+
+	WriteLog(f, "HttpSendRequestA() suceeded");
 
 	// todo: - error if not 200 OK
 	//       - remove while
@@ -145,29 +164,38 @@ bool GetBalance(wchar_t* apiKey, wchar_t* code, wchar_t* codeOut, bool& isRedeem
     while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
       json[dwRead] = 0;
       
-		isRedeemable = GetBool(json, "is_redeemable");
+		*isRedeemable = GetBool(json, "is_redeemable");
 
 
-	  	balanceInCents = GetNumber(json, "balance_in_cents");
-		totalAmountInCents = GetNumber(json, "total_amount_in_cents");
+	  	*balanceInCents = GetNumber(json, "balance_in_cents");
+		*totalAmountInCents = GetNumber(json, "total_amount_in_cents");
 
 		
 		// code
 		if (codeOut != NULL)
 		{
 			std::string code = GetString(json, "code");
-			wsprintf(codeOut, _T("%s"), s2ws(code).c_str()); 
+			sprintf(codeOut, "%s", code.c_str()); 
 		}
 
 		if (messageOut != NULL)
 		{
 			std::string message = GetString(json, "message");
-			wsprintf(messageOut, _T("%s"), s2ws(message).c_str());
+			sprintf(messageOut, "%s", message.c_str());
 		}
 		
 
       dwRead=0;
     }
+
+	fprintf(f, "Balance in Cents:%i\n", *balanceInCents);
+	fprintf(f, "Code out:%s\n", codeOut);
+	fflush(f);
+
+		
+	WriteLog(f, "Done! YES!");
+	fclose(f);
+
 
     ::InternetCloseHandle(hHttpRequest);
     ::InternetCloseHandle(hHttpSession);
@@ -176,31 +204,44 @@ bool GetBalance(wchar_t* apiKey, wchar_t* code, wchar_t* codeOut, bool& isRedeem
 	return true;
 }
 
+
 bool Hello()
 {
-	HINTERNET hIntSession = InternetOpen(_T("HTTPGET"),INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
+	FILE *f = fopen("Hello.txt", "w");
+
+	HINTERNET hIntSession = InternetOpenA("HTTPGET",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
 	
 	if (hIntSession == NULL)
 	{
+		WriteLog(f, "InternetOpenA() failed");
 		return false;
 	}
 	
+	WriteLog(f, "InternetOpenA() succeeded");
 
-	HINTERNET hHttpSession = InternetConnect(hIntSession, _T("api.e-guma.ch"),INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
 
+	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
 
-	std::wstring url = wstring(_T("v1/hello"));
+	WriteLog(f, "InternetConnectA() succeeded");
+
+	std::string url = string("v1/hello.json");
+
+    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "GET", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
+
+	WriteLog(f, "HttpOpenRequestA() succeeded");
+
 	
-
-    HINTERNET hHttpRequest = HttpOpenRequest(hHttpSession, _T("GET"), url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	
-    TCHAR* szHeaders = _T("Content-Type: application/json");
+    CHAR* szHeaders = "Content-Type: application/json";
     CHAR szReq[1024] = "";
-    if( !HttpSendRequest(hHttpRequest, szHeaders, _tcslen(szHeaders), szReq, strlen(szReq))) {
+    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
+		
 		DWORD dwErr = GetLastError();
+		WriteLog(f, "HttpSendRequestA() failed");
+
 		return false;
     }
+
+	WriteLog(f, "HttpSendRequestA() succeeded");
 
 	// todo: - error if not 200 OK
 	//       - remove while
@@ -208,20 +249,64 @@ bool Hello()
 
     CHAR json[1025];
     DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
+    ::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead);
       
-		if (json[0] != 'O' && json[1] != 'K')
-			return false;
+	WriteLog(f, "InternetReadFile() succeeded");
+	
+	json[dwRead] = 0;
+  
+	if (json[0] != 'O' && json[1] != 'K')
+	{
+		WriteLog(f, "No OK from Server...");
+		return false;
+	}
 
-		
 
-      dwRead=0;
-    }
+	WriteLog(f, "Done! YES!");
+	fclose(f);
 
     ::InternetCloseHandle(hHttpRequest);
     ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
+    ::InternetCloseHandle(hIntSession);	
 
 	return true;
+}
+
+
+void TestLogOnly()
+{
+	FILE *f = fopen("TestLogOnly.txt", "w");
+	if (f == NULL)
+	{
+		return;
+	}
+
+	fprintf(f, "Test succeeded");
+
+	fclose(f);
+}
+
+
+void TestLogStringParam(char* text)
+{
+	FILE *f = fopen("TestLogStringParam.txt", "w");
+	if (f == NULL)
+	{
+		return;
+	}
+
+	fprintf(f, "Text:%s\n", text);
+	fprintf(f, "Length:%i\n", strlen(text));
+
+	fclose(f);
+}
+
+void TestReturnStringAsParam(char* result)
+{
+	strcpy(result, "Hello MICROS!");
+}
+
+void TestReturnIntAsParam(int* result)
+{
+	*result = 1234;
 }

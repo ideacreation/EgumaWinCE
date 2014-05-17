@@ -2,7 +2,7 @@
     <ECSHARP>
         <Build>
             <Settings
-                DeploymentDevice = ""
+                DeploymentDevice = "Windows CE Emulator"
                 ReferencePath = ""
             >
                 <Platform Name = "Windows CE" />
