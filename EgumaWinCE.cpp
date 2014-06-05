@@ -291,7 +291,7 @@ bool Redeem(char* apiKey, char* code, int amountInCents, char* codeOut, int* bal
 
 bool Redeem2(char* apiKey, char* code, int* amountInCents, char* codeOut, int* balanceInCents, char* error)
 {
-	FILE *f = fopen("Redeem.txt", "w");
+	FILE *f = fopen("Redeem2.txt", "w");
 
 	fprintf(f, "API-Key:%s\n", apiKey);
 	fprintf(f, "Code:%s\n", code);
