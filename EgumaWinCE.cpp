@@ -210,6 +210,7 @@ bool Redeem(char* apiKey, char* code, int amountInCents, char* codeOut, int* bal
 
 	fprintf(f, "API-Key:%s\n", apiKey);
 	fprintf(f, "Code:%s\n", code);
+	fprintf(f, "AmountInCents:%i\n", amountInCents);
 	fflush(f);
 
 

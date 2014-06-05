@@ -11,13 +11,13 @@ namespace EgumaCppLibTester
 	{
 
 		[DllImport("Eguma.dll")]
-		public static extern bool GetBalance(byte[] apiKey, byte[] code, byte[] codeOut, out bool isRedeemable, out Int32 balanceInCents, out Int32 totalAmountInCents, byte[] messageOut, byte[] error);
+		public static extern bool GetBalance(byte[] apiKey, byte[] code, byte[] codeOut, out bool isRedeemable, out int balanceInCents, out Int32 totalAmountInCents, byte[] messageOut, byte[] error);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool Redeem(byte[] apiKey, byte[] code, Int32 amountInCents, byte[] codeOut, out Int32 balanceInCents, byte[] error);
+		public static extern bool Redeem(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool CancelRedemption(byte[] apiKey, byte[] code, Int32 amountInCents, byte[] codeOut, out Int32 balanceInCents, byte[] error);
+		public static extern bool CancelRedemption(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error);
 
 		[DllImport("Eguma.dll")]
 		public static extern bool DepotStatus(byte[] apiKey, byte[] code, out int amountInCents, out bool isInDepot, byte[] codeOut, byte[] error);
