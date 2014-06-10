@@ -458,7 +458,7 @@ bool CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut
 	return true;
 }
 
-bool DepotStatus(char* apiKey, char* code, int* amountInCents, bool* isInDepot, char* codeOut, char* error)
+bool DepotStatus(char* apiKey, char* code, int* amountInCents, bool* canBeActivated, bool* canBeDeactivated, char* codeOut, char* error)
 {
 	FILE *f = fopen("DepotStatus.txt", "w");
 
@@ -512,7 +512,9 @@ bool DepotStatus(char* apiKey, char* code, int* amountInCents, bool* isInDepot, 
       json[dwRead] = 0;
       
 		*amountInCents = GetNumber(json, "amount_in_cents");
-		*isInDepot = GetBool(json, "is_in_depot");
+
+		*canBeActivated = GetBool(json, "can_be_activated");
+		*canBeDeactivated = GetBool(json, "can_be_deactivated");
 		
 		// code
 		if (codeOut != NULL)

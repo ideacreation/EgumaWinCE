@@ -20,7 +20,7 @@ namespace EgumaCppLibTester
 		public static extern bool CancelRedemption(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool DepotStatus(byte[] apiKey, byte[] code, out int amountInCents, out bool isInDepot, byte[] codeOut, byte[] error);
+		public static extern bool DepotStatus(byte[] apiKey, byte[] code, out int amountInCents, out bool canBeActivated, out bool canBeDeactivated, byte[] codeOut, byte[] error);
 
 		[DllImport("Eguma.dll")]
 		public static extern bool Activate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error);
@@ -194,7 +194,6 @@ namespace EgumaCppLibTester
 			// 
 			// button4
 			// 
-			this.button4.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.button4.Location = new System.Drawing.Point(272, 40);
 			this.button4.Size = new System.Drawing.Size(200, 56);
 			this.button4.Text = "Redeem";
@@ -202,13 +201,11 @@ namespace EgumaCppLibTester
 			// 
 			// labelRedeemBalanceInCents
 			// 
-			this.labelRedeemBalanceInCents.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.labelRedeemBalanceInCents.Location = new System.Drawing.Point(392, 112);
 			this.labelRedeemBalanceInCents.Size = new System.Drawing.Size(80, 20);
 			// 
 			// label5
 			// 
-			this.label5.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.label5.Location = new System.Drawing.Point(216, 112);
 			this.label5.Size = new System.Drawing.Size(176, 24);
 			this.label5.Text = "Balance (in Cents):";
@@ -216,7 +213,6 @@ namespace EgumaCppLibTester
 			// 
 			// button5
 			// 
-			this.button5.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.button5.Location = new System.Drawing.Point(480, 40);
 			this.button5.Size = new System.Drawing.Size(200, 56);
 			this.button5.Text = "Cancel Redemption";
@@ -224,12 +220,10 @@ namespace EgumaCppLibTester
 			// 
 			// labelCancelRedemptionBalanceInCents
 			// 
-			this.labelCancelRedemptionBalanceInCents.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.labelCancelRedemptionBalanceInCents.Location = new System.Drawing.Point(592, 112);
 			// 
 			// label7
 			// 
-			this.label7.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.label7.Location = new System.Drawing.Point(480, 112);
 			this.label7.Size = new System.Drawing.Size(112, 24);
 			this.label7.Text = "Balance (in Cents):";
@@ -237,7 +231,6 @@ namespace EgumaCppLibTester
 			// 
 			// label3
 			// 
-			this.label3.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.label3.Location = new System.Drawing.Point(-32, 328);
 			this.label3.Size = new System.Drawing.Size(176, 24);
 			this.label3.Text = "Amount (in Cents):";
@@ -245,24 +238,20 @@ namespace EgumaCppLibTester
 			// 
 			// labelDepotStatusAmountInCents
 			// 
-			this.labelDepotStatusAmountInCents.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.labelDepotStatusAmountInCents.Location = new System.Drawing.Point(152, 328);
 			// 
 			// label9
 			// 
-			this.label9.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.label9.Location = new System.Drawing.Point(48, 352);
-			this.label9.Text = "Is in Depot:";
+			this.label9.Text = "CanBeActivated:";
 			this.label9.TextAlign = System.Drawing.ContentAlignment.TopRight;
 			// 
 			// labelDepotStatusIsInDepot
 			// 
-			this.labelDepotStatusIsInDepot.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.labelDepotStatusIsInDepot.Location = new System.Drawing.Point(152, 352);
 			// 
 			// button6
 			// 
-			this.button6.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.button6.Location = new System.Drawing.Point(48, 256);
 			this.button6.Size = new System.Drawing.Size(200, 56);
 			this.button6.Text = "Depot Status";
@@ -270,7 +259,6 @@ namespace EgumaCppLibTester
 			// 
 			// button7
 			// 
-			this.button7.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.button7.Location = new System.Drawing.Point(280, 256);
 			this.button7.Size = new System.Drawing.Size(200, 56);
 			this.button7.Text = "Activate";
@@ -278,7 +266,6 @@ namespace EgumaCppLibTester
 			// 
 			// button8
 			// 
-			this.button8.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.button8.Location = new System.Drawing.Point(528, 256);
 			this.button8.Size = new System.Drawing.Size(200, 56);
 			this.button8.Text = "Deactivate";
@@ -406,19 +393,21 @@ namespace EgumaCppLibTester
 		private void button6_Click(object sender, System.EventArgs e)
 		{
 			int amountInCents;
-			bool isInDepot;
+			bool canBeActivated;
+			bool canBeDeactivated;
 			byte[] codeOut = new byte[32];
 			byte[] error = new byte[1024];
 
 			DepotStatus(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 				System.Text.Encoding.ASCII.GetBytes("EADS-HD24-AKS5"),
 				out amountInCents,
-				out isInDepot,
+				out canBeDeactivated,
+				out canBeActivated,
 				codeOut,
 				error);		
 
 			labelDepotStatusAmountInCents.Text = amountInCents.ToString();
-			labelDepotStatusIsInDepot.Text = isInDepot ? "true" : "false";
+			labelDepotStatusIsInDepot.Text = canBeActivated ? "true" : "false";
 		}
 
 		private void button7_Click(object sender, System.EventArgs e)
