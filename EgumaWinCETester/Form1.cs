@@ -11,26 +11,23 @@ namespace EgumaCppLibTester
 	{
 
 		[DllImport("Eguma.dll")]
-		public static extern bool GetBalance(byte[] apiKey, byte[] code, byte[] codeOut, out bool isRedeemable, out int balanceInCents, out Int32 totalAmountInCents, byte[] messageOut, byte[] error);
+		public static extern void GetBalance(byte[] apiKey, byte[] code, byte[] codeOut, out bool isRedeemable, out int balanceInCents, out Int32 totalAmountInCents, byte[] messageOut, byte[] error, out bool hasError);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool Redeem(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error);
+		public static extern void Redeem(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error, out bool hasError);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool CancelRedemption(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error);
+		public static extern void CancelRedemption(byte[] apiKey, byte[] code, int amountInCents, byte[] codeOut, out int balanceInCents, byte[] error, out bool hasError);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool DepotStatus(byte[] apiKey, byte[] code, out int amountInCents, out bool canBeActivated, out bool canBeDeactivated, byte[] codeOut, byte[] error);
+		public static extern void DepotStatus(byte[] apiKey, byte[] code, out int amountInCents, out bool canBeActivated, out bool canBeDeactivated, byte[] codeOut, byte[] error, out bool hasError);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool Activate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error);
+		public static extern void Activate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error, out bool hasError);
 
 		[DllImport("Eguma.dll")]
-		public static extern bool Deactivate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error);
+		public static extern void Deactivate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error, out bool hasError);
 
-
-		[DllImport("Eguma.dll")]
-		public static extern bool Hello();
 
 		
 
@@ -45,7 +42,6 @@ namespace EgumaCppLibTester
 		private System.Windows.Forms.Label label6;
 		private System.Windows.Forms.Label labelTotalAmount;
 		private System.Windows.Forms.Label labelXX;
-		private System.Windows.Forms.Button button3;
 		private System.Windows.Forms.Button button4;
 		private System.Windows.Forms.Label labelRedeemBalanceInCents;
 		private System.Windows.Forms.Label label5;
@@ -59,6 +55,8 @@ namespace EgumaCppLibTester
 		private System.Windows.Forms.Label labelDepotStatusIsInDepot;
 		private System.Windows.Forms.Button button7;
 		private System.Windows.Forms.Button button8;
+		private System.Windows.Forms.Label label8;
+		private System.Windows.Forms.Label labelDepotCanBeDeactivated;
 
 
 
@@ -101,7 +99,6 @@ namespace EgumaCppLibTester
 			this.labelXX = new System.Windows.Forms.Label();
 			this.labelMessage = new System.Windows.Forms.Label();
 			this.label6 = new System.Windows.Forms.Label();
-			this.button3 = new System.Windows.Forms.Button();
 			this.button4 = new System.Windows.Forms.Button();
 			this.labelRedeemBalanceInCents = new System.Windows.Forms.Label();
 			this.label5 = new System.Windows.Forms.Label();
@@ -115,6 +112,8 @@ namespace EgumaCppLibTester
 			this.button6 = new System.Windows.Forms.Button();
 			this.button7 = new System.Windows.Forms.Button();
 			this.button8 = new System.Windows.Forms.Button();
+			this.label8 = new System.Windows.Forms.Label();
+			this.labelDepotCanBeDeactivated = new System.Windows.Forms.Label();
 			// 
 			// button1
 			// 
@@ -184,13 +183,6 @@ namespace EgumaCppLibTester
 			this.label6.Size = new System.Drawing.Size(176, 24);
 			this.label6.Text = "Message:";
 			this.label6.TextAlign = System.Drawing.ContentAlignment.TopRight;
-			// 
-			// button3
-			// 
-			this.button3.Location = new System.Drawing.Point(688, 40);
-			this.button3.Size = new System.Drawing.Size(144, 56);
-			this.button3.Text = "Hello";
-			this.button3.Click += new System.EventHandler(this.button3_Click);
 			// 
 			// button4
 			// 
@@ -271,9 +263,24 @@ namespace EgumaCppLibTester
 			this.button8.Text = "Deactivate";
 			this.button8.Click += new System.EventHandler(this.button8_Click);
 			// 
+			// label8
+			// 
+			this.label8.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
+			this.label8.Location = new System.Drawing.Point(8, 376);
+			this.label8.Size = new System.Drawing.Size(136, 20);
+			this.label8.Text = "CanBeDeactivated:";
+			this.label8.TextAlign = System.Drawing.ContentAlignment.TopRight;
+			// 
+			// labelDepotCanBeDeactivated
+			// 
+			this.labelDepotCanBeDeactivated.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
+			this.labelDepotCanBeDeactivated.Location = new System.Drawing.Point(152, 376);
+			// 
 			// Form1
 			// 
 			this.ClientSize = new System.Drawing.Size(866, 479);
+			this.Controls.Add(this.label8);
+			this.Controls.Add(this.labelDepotCanBeDeactivated);
 			this.Controls.Add(this.button8);
 			this.Controls.Add(this.button7);
 			this.Controls.Add(this.label3);
@@ -287,7 +294,6 @@ namespace EgumaCppLibTester
 			this.Controls.Add(this.labelRedeemBalanceInCents);
 			this.Controls.Add(this.label5);
 			this.Controls.Add(this.button4);
-			this.Controls.Add(this.button3);
 			this.Controls.Add(this.labelMessage);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.labelTotalAmount);
@@ -322,6 +328,7 @@ namespace EgumaCppLibTester
 			byte [] message = new byte[1024];
 			byte[] error = new byte[1024];
 			bool isRedeemable;
+			bool hasError;
 
 			GetBalance(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 					   System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6"),
@@ -330,15 +337,21 @@ namespace EgumaCppLibTester
 					   out balanceInCents,
 					   out totalAmount,
 					   message,
-					   error);
+					   error,
+					   out hasError);
+
+			
+			if (hasError)
+			{
+				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
+				return;
+			}
 
 			labelIsRedeemable.Text = isRedeemable ? "true" : "false";
 			labelCodeOut.Text = System.Text.Encoding.ASCII.GetString(codeOut, 0, codeOut.Length);
 			labelBalance.Text = balanceInCents.ToString();
 			labelTotalAmount.Text = totalAmount.ToString();
 			labelMessage.Text = System.Text.Encoding.ASCII.GetString(message, 0, message.Length);
-
-			//MessageBox.Show("OK! Check out the file GetBalance.txt in the root directory");
 		}
 
 		private void button2_Click(object sender, System.EventArgs e)
@@ -346,28 +359,27 @@ namespace EgumaCppLibTester
 			Close();
 		}
 
-		private void button3_Click(object sender, System.EventArgs e)
-		{
-			if (Hello())
-				MessageBox.Show("OK! Check out the file Hello.txt in the root directory");
-			else
-				MessageBox.Show("something went wrong...Check out the file Hello.txt in the root directory");
-
-		}
 
 		private void button4_Click_1(object sender, System.EventArgs e)
 		{
 			int balanceInCents;
 			byte[] codeOut = new byte[32];
 			byte[] error = new byte[1024];
+			bool hasError;
 
 			Redeem(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 				System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6"),
 				200,
 				codeOut,
 				out balanceInCents,
-				error);
+				error,
+				out hasError);
 
+			if (hasError)
+			{
+				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
+				return;
+			}
 
 			labelRedeemBalanceInCents.Text = balanceInCents.ToString();
 		}
@@ -378,14 +390,21 @@ namespace EgumaCppLibTester
 			int balanceInCents;
 			byte[] codeOut = new byte[32];
 			byte[] error = new byte[1024];
+			bool hasError;
 
 			CancelRedemption(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 				System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6"),
 				200,
 				codeOut,
 				out balanceInCents,
-				error);
+				error,
+				out hasError);
 
+			if (hasError)
+			{
+				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
+				return;
+			}
 
 			labelCancelRedemptionBalanceInCents.Text = balanceInCents.ToString();
 		}
@@ -397,17 +416,26 @@ namespace EgumaCppLibTester
 			bool canBeDeactivated;
 			byte[] codeOut = new byte[32];
 			byte[] error = new byte[1024];
+			bool hasError;
 
 			DepotStatus(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 				System.Text.Encoding.ASCII.GetBytes("EADS-HD24-AKS5"),
 				out amountInCents,
-				out canBeDeactivated,
 				out canBeActivated,
+				out canBeDeactivated,
 				codeOut,
-				error);		
+				error,
+				out hasError);		
+
+			if (hasError)
+			{
+				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
+				return;
+			}
 
 			labelDepotStatusAmountInCents.Text = amountInCents.ToString();
 			labelDepotStatusIsInDepot.Text = canBeActivated ? "true" : "false";
+			labelDepotCanBeDeactivated.Text = canBeDeactivated ? "true" : "false";
 		}
 
 		private void button7_Click(object sender, System.EventArgs e)
@@ -415,17 +443,19 @@ namespace EgumaCppLibTester
 			int amountInCents;
 			byte[] codeOut = new byte[32];
 			byte[] error = new byte[1024];
+			bool hasError;
 
-			bool result = Activate(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
+			Activate(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 				System.Text.Encoding.ASCII.GetBytes("EADS-HD24-AKS5"),
 				out amountInCents,
 				codeOut,
-				error);		
+				error,
+				out hasError);		
 
-			if (result)
-				MessageBox.Show("The voucher has been activated.");
+			if (hasError)
+				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
 			else
-				MessageBox.Show("Couldn't activate the voucher.");
+				MessageBox.Show("OK");
 			
 		}
 
@@ -435,17 +465,19 @@ namespace EgumaCppLibTester
 			int amountInCents;
 			byte[] codeOut = new byte[32];
 			byte[] error = new byte[1024];
+			bool hasError;
 
-			bool result = Deactivate(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
+			Deactivate(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 				System.Text.Encoding.ASCII.GetBytes("EADS-HD24-AKS5"),
 				out amountInCents,
 				codeOut,
-				error);		
+				error,
+				out hasError);		
 
-			if (result)
-				MessageBox.Show("The voucher has been deactivated.");
+			if (hasError)
+				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
 			else
-				MessageBox.Show("Couldn't deactivate the voucher.");
+				MessageBox.Show("OK");
 		}
 	}
 }

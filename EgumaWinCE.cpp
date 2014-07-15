@@ -1,16 +1,38 @@
-// EgumaCppLib.cpp : Defines the entry point for the DLL application.
-//
+/*  
+ Copyright (c) 2008-2014 Idea Creation GmbH
+
+ Permission is hereby granted, free of charge, to any person obtaining
+ a copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so, subject to
+ the following conditions:
+
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #include "stdafx.h"
 #include "EgumaWinCE.h"
-
 #include <wininet.h>
 #include <string>
 #include <ctype.h>
 
+using namespace std;
+
 #pragma comment( lib, "wininet" )
 
-using namespace std;
+
+#define VERSION_NUMBER "1.0.0.0" // when you update it, do it also in version.rc
 
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
@@ -30,45 +52,33 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 }
 
 
-std::wstring s2ws(const std::string& s)
+string GetString(const string& json, const string& key)
 {
-    int len;
-    int slength = (int)s.length() + 1;
-    len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0); 
-    wchar_t* buf = new wchar_t[len];
-    MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
-    std::wstring r(buf);
-    delete[] buf;
-    return r;
-}
+	// todo: if (found!=string::npos)
 
-std::string GetString(const std::string& json, const std::string& key)
-{
-	// todo: if (found!=std::string::npos)
+	string keyWithQuotes = "\"" + key + "\"";
+	string::size_type keyStartPos = json.find(keyWithQuotes);
+	string::size_type keyEndPos = keyStartPos + keyWithQuotes.length();
 
-	std::string keyWithQuotes = "\"" + key + "\"";
-	std::string::size_type keyStartPos = json.find(keyWithQuotes);
-	std::string::size_type keyEndPos = keyStartPos + keyWithQuotes.length();
-
-	std::string::size_type valueStartPos = json.find('\"', keyEndPos+1) + 1;
-	std::string::size_type valueEndPos = json.find('\"', valueStartPos) - 1;
+	string::size_type valueStartPos = json.find('\"', keyEndPos+1) + 1;
+	string::size_type valueEndPos = json.find('\"', valueStartPos) - 1;
 
 
-	std::string value = json.substr(valueStartPos, valueEndPos - valueStartPos + 1);
+	string value = json.substr(valueStartPos, valueEndPos - valueStartPos + 1);
 
 
 	return value;
 }
 
-bool GetBool(const std::string& json, const std::string& key)
+bool GetBool(const string& json, const string& key)
 {
-	// todo: if (found!=std::string::npos)
+	// todo: if (found!=string::npos)
 
-	std::string keyWithQuotes = "\"" + key + "\"";
-	std::string::size_type keyStartPos = json.find(keyWithQuotes);
-	std::string::size_type colonPos = json.find(':', keyStartPos);
+	string keyWithQuotes = "\"" + key + "\"";
+	string::size_type keyStartPos = json.find(keyWithQuotes);
+	string::size_type colonPos = json.find(':', keyStartPos);
 
-	std::string::size_type pos = colonPos + 1;
+	string::size_type pos = colonPos + 1;
 
 	if (json[pos] == 't')
 		return true;
@@ -76,17 +86,17 @@ bool GetBool(const std::string& json, const std::string& key)
 	return false;
 }
 
-int GetNumber(const std::string& json, const std::string& key)
+int GetNumber(const string& json, const string& key)
 {
-	// todo: if (found!=std::string::npos)
+	// todo: if (found!=string::npos)
 
-	std::string keyWithQuotes = "\"" + key + "\"";
-	std::string::size_type keyStartPos = json.find(keyWithQuotes);
-	std::string::size_type colonPos = json.find(':', keyStartPos);
+	string keyWithQuotes = "\"" + key + "\"";
+	string::size_type keyStartPos = json.find(keyWithQuotes);
+	string::size_type colonPos = json.find(':', keyStartPos);
    
-	std::string::size_type pos = colonPos + 1;
+	string::size_type pos = colonPos + 1;
 
-	std::string numberAsString;
+	string numberAsString;
 
 	while (isdigit(json[pos]))
 	{
@@ -105,757 +115,341 @@ void SetErrorMessage(char* error, char* message)
 	sprintf(error, "%s", message);
 }
 
+void WriteLogHeader(FILE* f)
+{
+	fprintf(f, "Version: %s\n", VERSION_NUMBER);
+	fflush(f);
+}
+
 void WriteLog(FILE* f, char* text)
 {
 	fprintf(f, "%s\n", text);
 	fflush(f);
 }
 
-bool GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable, int* balanceInCents, int* totalAmountInCents, char* messageOut, char* error)
+void WriteLog(FILE* f, char* name, char* value)
 {
-	FILE *f = fopen("GetBalance.txt", "w");
-
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
+	fprintf(f, "%s: %s\n", name, value);
 	fflush(f);
+}
 
+void WriteLog(FILE* f, char* name, int value)
+{
+	fprintf(f, "%s: %i\n", name, value);
+	fflush(f);
+}
 
+enum HttpMethod
+{
+	GET,
+	POST
+};
+
+bool SendHttpRequest(const string& url, HttpMethod httpMethod, char* postData, string& response, char* error, FILE* logFile)
+{
 	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
 	
 	if (hIntSession == NULL)
 	{
 		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
+		WriteLog(logFile, "InternetOpenA() failed");
 		return false;
 	}
-
-	WriteLog(f, "InternetOpenA() succeeded");
+	WriteLog(logFile, "InternetOpenA() succeeded");
 	
 
 	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
+	if (hHttpSession == NULL)
+	{
+		SetErrorMessage(error, "InternetConnectA() failed!");
+		WriteLog(logFile, "InternetConnectA() failed");
+		return false;
+	}
+	WriteLog(logFile, "InternetConnectA() succeeded");
 
-	WriteLog(f, "InternetConnectA() succeeded");
 
+	char* httpMethodAsString = NULL;
+	if (httpMethod == GET)
+		httpMethodAsString = "GET";
+	else if (httpMethod == POST)
+		httpMethodAsString = "POST";
 
-	std::string url = string("v1/vouchers/") + string(code) + string("/balance.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "GET", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
+	HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, httpMethodAsString, url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
+	if (hHttpRequest == NULL)
+	{
+		SetErrorMessage(error, "HttpOpenRequestA() failed!");
+		WriteLog(logFile, "HttpOpenRequestA() failed");
+		return false;
+	}
+	WriteLog(logFile, "HttpOpenRequestA() succeeded");
 	
-    CHAR* szHeaders = "Content-Type: application/json";
-    CHAR szReq[1024] = "";
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
+	
+	char* headers = NULL;
+	if (httpMethod == POST)
+		headers = "Content-Type: application/x-www-form-urlencoded";
+	else
+		headers = "Content-Type: application/json";
+
+    
+	int postDataSize = 0;
+	if (postData != NULL)
+		postDataSize = strlen(postData);
+
+    if( !HttpSendRequestA(hHttpRequest, headers, strlen(headers), postData, postDataSize)) {
+		
+		//DWORD dwErr = GetLastError();
       
 		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
+		WriteLog(logFile, "HttpSendRequestA() failded");
 
 		return false;
     }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
+	WriteLog(logFile, "HttpSendRequestA() suceeded");
 
 
-    CHAR json[1025];
+	char statusCodeBuffer[32];
+	DWORD statusCodeSize = sizeof(statusCodeBuffer);
+	if (!HttpQueryInfoA(hHttpRequest, HTTP_QUERY_STATUS_CODE, &statusCodeBuffer, &statusCodeSize, NULL))
+	{      
+		SetErrorMessage(error, "HttpQueryInfoA() failed!");
+		WriteLog(logFile, "HttpQueryInfoA() failded");
+
+		return false;
+	}
+	
+	statusCodeBuffer[statusCodeSize] = '\0';
+	int statusCode = atoi(statusCodeBuffer);
+
+	WriteLog(logFile, "Status Code", statusCode);
+
+
+	char responseBuffer[1025];
     DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*isRedeemable = GetBool(json, "is_redeemable");
+    while(InternetReadFile(hHttpRequest, responseBuffer, sizeof(responseBuffer)-1, &dwRead) && dwRead)
+	{
+		responseBuffer[dwRead] = 0;
 
+		WriteLog(logFile, "Response Data", responseBuffer);
 
-	  	*balanceInCents = GetNumber(json, "balance_in_cents");
-		*totalAmountInCents = GetNumber(json, "total_amount_in_cents");
+		response += responseBuffer;
 
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
+		dwRead=0;
+	}
 
-		if (messageOut != NULL)
-		{
-			std::string message = GetString(json, "message");
-			sprintf(messageOut, "%s", message.c_str());
-		}
-		
+    InternetCloseHandle(hHttpRequest);
+    InternetCloseHandle(hHttpSession);
+    InternetCloseHandle(hIntSession);
 
-      dwRead=0;
-    }
+	if (statusCode != 200)
+	{
+		sprintf(error, response.c_str(), response.length());
+		return false;
+	}
 
-	fprintf(f, "Balance in Cents:%i\n", *balanceInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
 
 	return true;
 }
 
-bool Redeem(char* apiKey, char* code, int amountInCents, char* codeOut, int* balanceInCents, char* error)
+void GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable, 
+				int* balanceInCents, int* totalAmountInCents, char* message, 
+				char* error, bool* hasError)
 {
-	FILE *f = fopen("Redeem.txt", "w");
+	FILE* logFile = fopen("EgumaGetBalance.txt", "w");
 
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fprintf(f, "AmountInCents:%i\n", amountInCents);
-	fflush(f);
+	WriteLogHeader(logFile);
+	WriteLog(logFile, "API-Key", apiKey);
+	WriteLog(logFile, "Code", code);
 
 
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
+	string url = string("v1/vouchers/") + string(code) + string("/balance.json?apikey=") + string(apiKey);
+	string json;
 	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
+	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
+	{  
+		*hasError = true;
+		return;
 	}
 
-	WriteLog(f, "InternetOpenA() succeeded");
 	
+	*isRedeemable = GetBool(json, "is_redeemable");
+	*balanceInCents = GetNumber(json, "balance_in_cents");
+	*totalAmountInCents = GetNumber(json, "total_amount_in_cents");
 
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
+	string codeTmp = GetString(json, "code");
+	sprintf(codeOut, "%s", codeTmp.c_str()); 
 
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/redeem.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "POST", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
+	string msg = GetString(json, "message");
+	sprintf(message, "%s", msg.c_str());
 	
-    CHAR* szHeaders = "Content-Type: application/x-www-form-urlencoded";
-    CHAR szReq[1024] = "";
-	sprintf(szReq, "amount_in_cents=%i", amountInCents);
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
+	
+	WriteLog(logFile, "Balance in Cents", *balanceInCents);
+	WriteLog(logFile, "Code out", codeOut);
+	WriteLog(logFile, "Done!");
 
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
-
-
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*balanceInCents = GetNumber(json, "balance_in_cents");
-
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
-		
-
-      dwRead=0;
-    }
-
-	fprintf(f, "Balance in Cents:%i\n", *balanceInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
+	fclose(logFile);
 }
 
-bool Redeem2(char* apiKey, char* code, int* amountInCents, char* codeOut, int* balanceInCents, char* error)
+
+void Redeem(char* apiKey, char* code, int amountInCents, char* codeOut, 
+			int* balanceInCents, char* error, bool* hasError)
 {
-	FILE *f = fopen("Redeem2.txt", "w");
+	FILE* logFile = fopen("EgumaRedeem.txt", "w");
 
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fprintf(f, "AmountInCents:%i\n", *amountInCents);
-	fflush(f);
+	WriteLog(logFile, "API-Key", apiKey);
+	WriteLog(logFile, "Code", code);
+	WriteLog(logFile, "AmountInCents", amountInCents);
 
 
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
-	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
+	string url = string("v1/vouchers/") + string(code) + string("/redeem.json?apikey=") + string(apiKey);
+	char postData[1024];
+	sprintf(postData, "amount_in_cents=%i", amountInCents);
+	string json;
+
+	if (!SendHttpRequest(url, POST, postData, json, error, logFile))
+	{  
+		*hasError = true;
+		return;
 	}
-
-	WriteLog(f, "InternetOpenA() succeeded");
 	
+	*balanceInCents = GetNumber(json, "balance_in_cents");
 
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/redeem.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "POST", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
-	
-    CHAR* szHeaders = "Content-Type: application/x-www-form-urlencoded";
-    CHAR szReq[1024] = "";
-	sprintf(szReq, "amount_in_cents=%i", *amountInCents);
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
-
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
+	string codeTmp = GetString(json, "code");
+	sprintf(codeOut, "%s", codeTmp.c_str()); 
 
 
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*balanceInCents = GetNumber(json, "balance_in_cents");
+	WriteLog(logFile, "Balance in Cents", *balanceInCents);
+	WriteLog(logFile, "Code out", codeOut);
+	WriteLog(logFile, "Done!");
 
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
-		
-
-      dwRead=0;
-    }
-
-	fprintf(f, "Balance in Cents:%i\n", *balanceInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
+	fclose(logFile);
 }
 
-bool CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut, int* balanceInCents, char* error)
+void CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut,
+					  int* balanceInCents, char* error, bool* hasError)
 {
-	FILE *f = fopen("CancelRedemption.txt", "w");
+	FILE* logFile = fopen("EgumaCancelRedemption.txt", "w");
 
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fprintf(f, "amountInCents:%i\n", amountInCents);
-	fflush(f);
+	WriteLog(logFile, "API-Key", apiKey);
+	WriteLog(logFile, "Code", code);
+	WriteLog(logFile, "AmountInCents", amountInCents);
 
 
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
-	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
+	string url = string("v1/vouchers/") + string(code) + string("/cancel_redemption.json?apikey=") + string(apiKey);
+	char postData[1024];
+	sprintf(postData, "amount_in_cents=%i", amountInCents);
+	string json;
+
+	if (!SendHttpRequest(url, POST, postData, json, error, logFile))
+	{  
+		*hasError = true;
+		return;
 	}
 
-	WriteLog(f, "InternetOpenA() succeeded");
 	
+	*balanceInCents = GetNumber(json, "balance_in_cents");
 
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/cancel_redemption.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "POST", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
-	
-    CHAR* szHeaders = "Content-Type: application/x-www-form-urlencoded";
-    CHAR szReq[1024] = "";
-	sprintf(szReq, "amount_in_cents=%i", amountInCents);
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
-
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
+	string codeTmp = GetString(json, "code");
+	sprintf(codeOut, "%s", codeTmp.c_str()); 
 
 
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*balanceInCents = GetNumber(json, "balance_in_cents");
+	WriteLog(logFile, "Balance in Cents", *balanceInCents);
+	WriteLog(logFile, "Code out", codeOut);
+	WriteLog(logFile, "Done!");
 
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
-		
-
-      dwRead=0;
-    }
-
-	fprintf(f, "Balance in Cents:%i\n", *balanceInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
+	fclose(logFile);
 }
 
-bool Undo(char* apiKey, char* code, int amountInCents, char* codeOut, int* balanceInCents, char* error)
+void DepotStatus(char* apiKey, char* code, int* amountInCents, bool* canBeActivated,
+				 bool* canBeDeactivated, char* codeOut, char* error, bool* hasError)
 {
-	FILE *f = fopen("Undo.txt", "w");
+	FILE* logFile = fopen("EgumaDepotStatus.txt", "w");
 
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fprintf(f, "amountInCents:%i\n", amountInCents);
-	fflush(f);
-
-
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
+	WriteLog(logFile, "API-Key", apiKey);
+	WriteLog(logFile, "Code", code);
 	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
+
+	string url = string("v1/vouchers/") + string(code) + string("/depot_status.json?apikey=") + string(apiKey);
+	string json;
+
+	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
+	{  
+		*hasError = true;
+		return;
 	}
 
-	WriteLog(f, "InternetOpenA() succeeded");
+
+	*amountInCents = GetNumber(json, "amount_in_cents");
+
+	*canBeActivated = GetBool(json, "can_be_activated");
+	*canBeDeactivated = GetBool(json, "can_be_deactivated");
 	
-
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/cancel_redemption.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "POST", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
-	
-    CHAR* szHeaders = "Content-Type: application/x-www-form-urlencoded";
-    CHAR szReq[1024] = "";
-	sprintf(szReq, "amount_in_cents=%i", amountInCents);
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
-
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
-
-
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*balanceInCents = GetNumber(json, "balance_in_cents");
-
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
+	string codeTemp = GetString(json, "code");
+	sprintf(codeOut, "%s", codeTemp.c_str()); 
 		
 
-      dwRead=0;
-    }
+	WriteLog(logFile, "Amount in Cents", *amountInCents);
+	WriteLog(logFile, "Code out", codeOut);
+	WriteLog(logFile, "Done!");
 
-	fprintf(f, "Balance in Cents:%i\n", *balanceInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
+	fclose(logFile);
 }
 
-bool DepotStatus(char* apiKey, char* code, int* amountInCents, bool* canBeActivated, bool* canBeDeactivated, char* codeOut, char* error)
+void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, bool* hasError)
 {
-	FILE *f = fopen("DepotStatus.txt", "w");
+	FILE* logFile = fopen("EgumaActivate.txt", "w");
 
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fflush(f);
+	WriteLog(logFile, "API-Key", apiKey);
+	WriteLog(logFile, "Code", code);
 
+	string url = string("v1/vouchers/") + string(code) + string("/activate.json?apikey=") + string(apiKey);
+	string json;
 
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
-	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
+	if (!SendHttpRequest(url, POST, NULL, json, error, logFile))
+	{  
+		*hasError = true;
+		return;
 	}
 
-	WriteLog(f, "InternetOpenA() succeeded");
 	
-
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/depot_status.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "GET", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
+	*amountInCents = GetNumber(json, "amount_in_cents");
+		
+	string codeTmp = GetString(json, "code");
+	sprintf(codeOut, "%s", codeTmp.c_str());
 	
-    CHAR* szHeaders = "Content-Type: application/json";
-    CHAR szReq[1024] = "";
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
+	
+	WriteLog(logFile, "Amount in Cents", *amountInCents);
+	WriteLog(logFile, "Code out", codeOut);
+	WriteLog(logFile, "Done!");
 
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
-
-
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*amountInCents = GetNumber(json, "amount_in_cents");
-
-		*canBeActivated = GetBool(json, "can_be_activated");
-		*canBeDeactivated = GetBool(json, "can_be_deactivated");
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
-		
-
-      dwRead=0;
-    }
-
-	fprintf(f, "Amount in Cents:%i\n", *amountInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
+	fclose(logFile);
 }
 
-bool Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error)
+void Deactivate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, bool* hasError)
 {
-	FILE *f = fopen("Activate.txt", "w");
+	FILE* logFile = fopen("EgumaDeactivate.txt", "w");
 
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fflush(f);
+	WriteLog(logFile, "API-Key", apiKey);
+	WriteLog(logFile, "Code", code);
 
+	string url = string("v1/vouchers/") + string(code) + string("/deactivate.json?apikey=") + string(apiKey);
+	string json;
 
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
-	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
+	if (!SendHttpRequest(url, POST, NULL, json, error, logFile))
+	{  
+		*hasError = true;
+		return;
 	}
 
-	WriteLog(f, "InternetOpenA() succeeded");
 	
-
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/activate.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "POST", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
-	
-    CHAR* szHeaders = "Content-Type: application/json";
-    CHAR szReq[1024] = "";
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
-
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
-
-
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*amountInCents = GetNumber(json, "amount_in_cents");
+	*amountInCents = GetNumber(json, "amount_in_cents");
 		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
-		
-
-      dwRead=0;
-    }
-
-	fprintf(f, "Amount in Cents:%i\n", *amountInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
-}
-
-bool Deactivate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error)
-{
-	FILE *f = fopen("Deactivate.txt", "w");
-
-	fprintf(f, "API-Key:%s\n", apiKey);
-	fprintf(f, "Code:%s\n", code);
-	fflush(f);
-
-
-	HINTERNET hIntSession = InternetOpenA("EgumaWinCE",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
+	string codeTmp = GetString(json, "code");
+	sprintf(codeOut, "%s", codeTmp.c_str());
 	
-	if (hIntSession == NULL)
-	{
-		SetErrorMessage(error, "InternetOpen() failed!");
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
-	}
-
-	WriteLog(f, "InternetOpenA() succeeded");
 	
+	WriteLog(logFile, "Amount in Cents", *amountInCents);
+	WriteLog(logFile, "Code out", codeOut);
+	WriteLog(logFile, "Done!");
 
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-
-	std::string url = string("v1/vouchers/") + string(code) + string("/deactivate.json?apikey=") + string(apiKey);
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "POST", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
-	
-    CHAR* szHeaders = "Content-Type: application/json";
-    CHAR szReq[1024] = "";
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(f, "HttpSendRequestA() failded");
-
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() suceeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
-
-
-    CHAR json[1025];
-    DWORD dwRead=0;
-    while(::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead) && dwRead) {
-      json[dwRead] = 0;
-      
-		*amountInCents = GetNumber(json, "amount_in_cents");
-		
-		// code
-		if (codeOut != NULL)
-		{
-			std::string code = GetString(json, "code");
-			sprintf(codeOut, "%s", code.c_str()); 
-		}
-		
-
-      dwRead=0;
-    }
-
-	fprintf(f, "Amount in Cents:%i\n", *amountInCents);
-	fprintf(f, "Code out:%s\n", codeOut);
-	fflush(f);
-
-		
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);
-
-	return true;
-}
-
-bool Hello()
-{
-	FILE *f = fopen("Hello.txt", "w");
-
-	HINTERNET hIntSession = InternetOpenA("HTTPGET",INTERNET_OPEN_TYPE_DIRECT,NULL,NULL,0);
-	
-	if (hIntSession == NULL)
-	{
-		WriteLog(f, "InternetOpenA() failed");
-		return false;
-	}
-	
-	WriteLog(f, "InternetOpenA() succeeded");
-
-
-	HINTERNET hHttpSession = InternetConnectA(hIntSession, "api.e-guma.ch",INTERNET_DEFAULT_HTTP_PORT, NULL,NULL,INTERNET_SERVICE_HTTP,0,0);
-
-	WriteLog(f, "InternetConnectA() succeeded");
-
-	std::string url = string("v1/hello.json");
-
-    HINTERNET hHttpRequest = HttpOpenRequestA(hHttpSession, "GET", url.c_str(), 0, 0, 0, INTERNET_FLAG_RELOAD, 0);
-
-	WriteLog(f, "HttpOpenRequestA() succeeded");
-
-	
-    CHAR* szHeaders = "Content-Type: application/json";
-    CHAR szReq[1024] = "";
-    if( !HttpSendRequestA(hHttpRequest, szHeaders, strlen(szHeaders), szReq, strlen(szReq))) {
-		
-		DWORD dwErr = GetLastError();
-		WriteLog(f, "HttpSendRequestA() failed");
-
-		return false;
-    }
-
-	WriteLog(f, "HttpSendRequestA() succeeded");
-
-	// todo: - error if not 200 OK
-	//       - remove while
-
-
-    CHAR json[1025];
-    DWORD dwRead=0;
-    ::InternetReadFile(hHttpRequest, json, sizeof(json)-1, &dwRead);
-      
-	WriteLog(f, "InternetReadFile() succeeded");
-	
-	json[dwRead] = 0;
-  
-	if (json[0] != 'O' && json[1] != 'K')
-	{
-		WriteLog(f, "No OK from Server...");
-		return false;
-	}
-
-
-	WriteLog(f, "Done! YES!");
-	fclose(f);
-
-    ::InternetCloseHandle(hHttpRequest);
-    ::InternetCloseHandle(hHttpSession);
-    ::InternetCloseHandle(hIntSession);	
-
-	return true;
+	fclose(logFile);
 }
