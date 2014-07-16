@@ -35,6 +35,13 @@ using namespace std;
 #define VERSION_NUMBER "1.0.0.0" // when you update it, do it also in version.rc
 
 
+enum HttpMethod
+{
+	GET,
+	POST
+};
+
+
 BOOL APIENTRY DllMain( HANDLE hModule, 
                        DWORD  ul_reason_for_call, 
                        LPVOID lpReserved
@@ -107,7 +114,7 @@ int GetNumber(const string& json, const string& key)
 	return atoi(numberAsString.c_str());
 }
 
-void SetErrorMessage(char* error, char* message)
+void SetErrorMessage(char* error, const char* message)
 {
 	if (error == NULL)
 		return;
@@ -117,17 +124,17 @@ void SetErrorMessage(char* error, char* message)
 
 void WriteLogHeader(FILE* f)
 {
-	fprintf(f, "Version: %s\n", VERSION_NUMBER);
+	fprintf(f, "Dll Version: %s\n", VERSION_NUMBER);
 	fflush(f);
 }
 
-void WriteLog(FILE* f, char* text)
+void WriteLog(FILE* f, const char* text)
 {
 	fprintf(f, "%s\n", text);
 	fflush(f);
 }
 
-void WriteLog(FILE* f, char* name, char* value)
+void WriteLog(FILE* f, const char* name, const char* value)
 {
 	fprintf(f, "%s: %s\n", name, value);
 	fflush(f);
@@ -139,11 +146,6 @@ void WriteLog(FILE* f, char* name, int value)
 	fflush(f);
 }
 
-enum HttpMethod
-{
-	GET,
-	POST
-};
 
 bool SendHttpRequest(const string& url, HttpMethod httpMethod, char* postData, string& response, char* error, FILE* logFile)
 {
@@ -197,10 +199,13 @@ bool SendHttpRequest(const string& url, HttpMethod httpMethod, char* postData, s
 
     if( !HttpSendRequestA(hHttpRequest, headers, strlen(headers), postData, postDataSize)) {
 		
-		//DWORD dwErr = GetLastError();
-      
-		SetErrorMessage(error, "HttpSendRequest() failed!");
-		WriteLog(logFile, "HttpSendRequestA() failded");
+		DWORD errorCode = GetLastError();
+		
+		char errorMsg[1024];
+		sprintf(errorMsg, "Can not connect to the E-GUMA Server. Please ensure that the workstation has access to the Internet. Error Code '%d'", errorCode);
+
+		SetErrorMessage(error, errorMsg);
+		WriteLog(logFile, errorMsg);
 
 		return false;
     }
@@ -254,7 +259,7 @@ void GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable,
 				int* balanceInCents, int* totalAmountInCents, char* message, 
 				char* error, bool* hasError)
 {
-	FILE* logFile = fopen("EgumaGetBalance.txt", "w");
+	FILE* logFile = fopen("EgumaBalance.txt", "w");
 
 	WriteLogHeader(logFile);
 	WriteLog(logFile, "API-Key", apiKey);
