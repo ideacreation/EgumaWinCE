@@ -255,10 +255,12 @@ bool SendHttpRequest(const string& url, HttpMethod httpMethod, char* postData, s
 	return true;
 }
 
-void GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable, 
+void GetBalance(char* apiKey, char* code, char* codeOut, int* isRedeemable, 
 				int* balanceInCents, int* totalAmountInCents, char* message, 
-				char* error, bool* hasError)
+				char* error, int* hasError)
 {
+	*hasError = 0;
+
 	FILE* logFile = fopen("EgumaBalance.txt", "w");
 
 	WriteLogHeader(logFile);
@@ -271,7 +273,7 @@ void GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable,
 	
 	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
 	{  
-		*hasError = true;
+		*hasError = 1;
 		return;
 	}
 
@@ -296,8 +298,10 @@ void GetBalance(char* apiKey, char* code, char* codeOut, bool* isRedeemable,
 
 
 void Redeem(char* apiKey, char* code, int amountInCents, char* codeOut, 
-			int* balanceInCents, char* error, bool* hasError)
+			int* balanceInCents, char* error, int* hasError)
 {
+	*hasError = 0;
+
 	FILE* logFile = fopen("EgumaRedeem.txt", "w");
 
 	WriteLog(logFile, "API-Key", apiKey);
@@ -312,7 +316,7 @@ void Redeem(char* apiKey, char* code, int amountInCents, char* codeOut,
 
 	if (!SendHttpRequest(url, POST, postData, json, error, logFile))
 	{  
-		*hasError = true;
+		*hasError = 1;
 		return;
 	}
 	
@@ -330,8 +334,10 @@ void Redeem(char* apiKey, char* code, int amountInCents, char* codeOut,
 }
 
 void CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut,
-					  int* balanceInCents, char* error, bool* hasError)
+					  int* balanceInCents, char* error, int* hasError)
 {
+	*hasError = 0;
+
 	FILE* logFile = fopen("EgumaCancelRedemption.txt", "w");
 
 	WriteLog(logFile, "API-Key", apiKey);
@@ -346,7 +352,7 @@ void CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut
 
 	if (!SendHttpRequest(url, POST, postData, json, error, logFile))
 	{  
-		*hasError = true;
+		*hasError = 1;
 		return;
 	}
 
@@ -364,9 +370,11 @@ void CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut
 	fclose(logFile);
 }
 
-void DepotStatus(char* apiKey, char* code, int* amountInCents, bool* canBeActivated,
-				 bool* canBeDeactivated, char* codeOut, char* error, bool* hasError)
+void DepotStatus(char* apiKey, char* code, int* amountInCents, int* canBeActivated,
+				 int* canBeDeactivated, char* codeOut, char* error, int* hasError)
 {
+	*hasError = 0;
+
 	FILE* logFile = fopen("EgumaDepotStatus.txt", "w");
 
 	WriteLog(logFile, "API-Key", apiKey);
@@ -378,7 +386,7 @@ void DepotStatus(char* apiKey, char* code, int* amountInCents, bool* canBeActiva
 
 	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
 	{  
-		*hasError = true;
+		*hasError = 1;
 		return;
 	}
 
@@ -399,8 +407,10 @@ void DepotStatus(char* apiKey, char* code, int* amountInCents, bool* canBeActiva
 	fclose(logFile);
 }
 
-void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, bool* hasError)
+void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, int* hasError)
 {
+	*hasError = 0;
+
 	FILE* logFile = fopen("EgumaActivate.txt", "w");
 
 	WriteLog(logFile, "API-Key", apiKey);
@@ -411,7 +421,7 @@ void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char*
 
 	if (!SendHttpRequest(url, POST, NULL, json, error, logFile))
 	{  
-		*hasError = true;
+		*hasError = 1;
 		return;
 	}
 
@@ -429,8 +439,10 @@ void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char*
 	fclose(logFile);
 }
 
-void Deactivate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, bool* hasError)
+void Deactivate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, int* hasError)
 {
+	*hasError = 0;
+
 	FILE* logFile = fopen("EgumaDeactivate.txt", "w");
 
 	WriteLog(logFile, "API-Key", apiKey);
@@ -441,7 +453,7 @@ void Deactivate(char* apiKey, char* code, int* amountInCents, char* codeOut, cha
 
 	if (!SendHttpRequest(url, POST, NULL, json, error, logFile))
 	{  
-		*hasError = true;
+		*hasError = 1;
 		return;
 	}
 
