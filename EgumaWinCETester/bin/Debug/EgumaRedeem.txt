@@ -1,0 +1,12 @@
+API-Key: 510e32c594d84816a4af9df0
+Code: 2QH3-QTDM-28N6
+AmountInCents: 200
+InternetOpenA() succeeded
+InternetConnectA() succeeded
+HttpOpenRequestA() succeeded
+HttpSendRequestA() suceeded
+Status Code: 200
+Response Data: {"code":"2QH3QTDM28N6","balance_in_cents":3000,"voucher_document_url":"https://www.e-guma.ch//download?vId=6d823b8b-8464-4d8e-8d67-1427fc83b445"}
+Balance in Cents: 3000
+Code out: 2QH3QTDM28N6
+Done!

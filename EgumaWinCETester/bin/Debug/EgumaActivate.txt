@@ -1,0 +1,11 @@
+API-Key: 510e32c594d84816a4af9df0
+Code: EADS-HD24-AKS5
+InternetOpenA() succeeded
+InternetConnectA() succeeded
+HttpOpenRequestA() succeeded
+HttpSendRequestA() suceeded
+Status Code: 200
+Response Data: {"code":"EADS-HD24-AKS5","amount_in_cents":5000}
+Amount in Cents: 5000
+Code out: EADS-HD24-AKS5
+Done!

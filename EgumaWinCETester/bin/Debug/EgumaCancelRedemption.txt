@@ -1,0 +1,12 @@
+API-Key: 510e32c594d84816a4af9df0
+Code: 2QH3-QTDM-28N6
+AmountInCents: 200
+InternetOpenA() succeeded
+InternetConnectA() succeeded
+HttpOpenRequestA() succeeded
+HttpSendRequestA() suceeded
+Status Code: 200
+Response Data: {"code":"2QH3-QTDM-28N6","balance_in_cents":3200}
+Balance in Cents: 3200
+Code out: 2QH3-QTDM-28N6
+Done!

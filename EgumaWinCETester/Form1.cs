@@ -328,7 +328,7 @@ namespace EgumaCppLibTester
 			byte [] message = new byte[1024];
 			byte[] error = new byte[1024];
 			bool isRedeemable;
-			bool hasError;
+			bool hasError = false;
 
 			GetBalance(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
 					   System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6"),
@@ -343,6 +343,7 @@ namespace EgumaCppLibTester
 			
 			if (hasError)
 			{
+				
 				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
 				return;
 			}
