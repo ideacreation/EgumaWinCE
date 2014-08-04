@@ -28,6 +28,8 @@ namespace EgumaCppLibTester
 		[DllImport("Eguma.dll")]
 		public static extern void Deactivate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error, out bool hasError);
 
+		[DllImport("Eguma.dll")]
+		public static extern void Hello();
 
 		
 
@@ -57,6 +59,7 @@ namespace EgumaCppLibTester
 		private System.Windows.Forms.Button button8;
 		private System.Windows.Forms.Label label8;
 		private System.Windows.Forms.Label labelDepotCanBeDeactivated;
+		private System.Windows.Forms.Button button3;
 
 
 
@@ -114,6 +117,7 @@ namespace EgumaCppLibTester
 			this.button8 = new System.Windows.Forms.Button();
 			this.label8 = new System.Windows.Forms.Label();
 			this.labelDepotCanBeDeactivated = new System.Windows.Forms.Label();
+			this.button3 = new System.Windows.Forms.Button();
 			// 
 			// button1
 			// 
@@ -265,7 +269,6 @@ namespace EgumaCppLibTester
 			// 
 			// label8
 			// 
-			this.label8.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.label8.Location = new System.Drawing.Point(8, 376);
 			this.label8.Size = new System.Drawing.Size(136, 20);
 			this.label8.Text = "CanBeDeactivated:";
@@ -273,12 +276,20 @@ namespace EgumaCppLibTester
 			// 
 			// labelDepotCanBeDeactivated
 			// 
-			this.labelDepotCanBeDeactivated.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
 			this.labelDepotCanBeDeactivated.Location = new System.Drawing.Point(152, 376);
+			// 
+			// button3
+			// 
+			this.button3.Font = new System.Drawing.Font("Tahoma", 9F, System.Drawing.FontStyle.Regular);
+			this.button3.Location = new System.Drawing.Point(536, 400);
+			this.button3.Size = new System.Drawing.Size(200, 56);
+			this.button3.Text = "Hello";
+			this.button3.Click += new System.EventHandler(this.button3_Click);
 			// 
 			// Form1
 			// 
 			this.ClientSize = new System.Drawing.Size(866, 479);
+			this.Controls.Add(this.button3);
 			this.Controls.Add(this.label8);
 			this.Controls.Add(this.labelDepotCanBeDeactivated);
 			this.Controls.Add(this.button8);
@@ -479,6 +490,12 @@ namespace EgumaCppLibTester
 				MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
 			else
 				MessageBox.Show("OK");
+		}
+
+		private void button3_Click(object sender, System.EventArgs e)
+		{
+			Hello();
+			MessageBox.Show("OK");
 		}
 	}
 }
