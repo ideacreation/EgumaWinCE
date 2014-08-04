@@ -29,7 +29,7 @@ namespace EgumaCppLibTester
 		public static extern void Deactivate(byte[] apiKey, byte[] code, out int amountInCents, byte[] codeOut, byte[] error, out bool hasError);
 
 		[DllImport("Eguma.dll")]
-		public static extern void Hello();
+		public static extern void Hello(byte[] apiKey);
 
 		
 
@@ -494,8 +494,10 @@ namespace EgumaCppLibTester
 
 		private void button3_Click(object sender, System.EventArgs e)
 		{
-			Hello();
-			MessageBox.Show("OK");
+			byte[] error = new byte[1024];
+
+			Hello(error);
+			MessageBox.Show(System.Text.Encoding.ASCII.GetString(error, 0, error.Length));
 		}
 	}
 }
