@@ -25,6 +25,7 @@
 #include "EgumaWinCE.h"
 #include <wininet.h>
 #include <string>
+#include <algorithm>
 #include <ctype.h>
 
 using namespace std;
@@ -32,7 +33,7 @@ using namespace std;
 #pragma comment( lib, "wininet" )
 
 
-#define VERSION_NUMBER "1.0.0.0" // when you update it, do it also in version.rc
+#define VERSION_NUMBER "1.0.3.0" // when you update it, do it also in version.rc
 
 
 enum HttpMethod
@@ -114,6 +115,15 @@ int GetNumber(const string& json, const string& key)
 	return atoi(numberAsString.c_str());
 }
 
+bool IsSpace (int i) { return (i == ' '); }
+
+string CleanCode(char* code)
+{
+	string c(code);
+	c.erase(remove_if(c.begin(), c.end(), IsSpace), c.end());
+	return c;
+}
+
 void SetErrorMessage(char* error, const char* message)
 {
 	if (error == NULL)
@@ -136,13 +146,13 @@ void WriteLog(FILE* f, const char* text)
 
 void WriteLog(FILE* f, const char* name, const char* value)
 {
-	fprintf(f, "%s: %s\n", name, value);
+	fprintf(f, "%s: '%s'\n", name, value);
 	fflush(f);
 }
 
 void WriteLog(FILE* f, char* name, int value)
 {
-	fprintf(f, "%s: %i\n", name, value);
+	fprintf(f, "%s: '%i'\n", name, value);
 	fflush(f);
 }
 
@@ -255,6 +265,30 @@ bool SendHttpRequest(const string& url, HttpMethod httpMethod, char* postData, s
 	return true;
 }
 
+void Hello()
+{
+	FILE* logFile = fopen("EgumaHello.txt", "w");
+
+	WriteLogHeader(logFile);
+
+	string url = "/v1/hello.json";
+	string json;
+	char error[1024];
+	
+	
+	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
+	{  
+		return;
+	}
+
+	
+
+	WriteLog(logFile, "Done!");
+
+	fclose(logFile);
+}
+
+
 void GetBalance(char* apiKey, char* code, char* codeOut, int* isRedeemable, 
 				int* balanceInCents, int* totalAmountInCents, char* message, 
 				char* error, int* hasError)
@@ -268,7 +302,7 @@ void GetBalance(char* apiKey, char* code, char* codeOut, int* isRedeemable,
 	WriteLog(logFile, "Code", code);
 
 
-	string url = string("v1/vouchers/") + string(code) + string("/balance.json?apikey=") + string(apiKey);
+	string url = string("v1/vouchers/") + CleanCode(code) + string("/balance.json?apikey=") + string(apiKey);
 	string json;
 	
 	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
@@ -297,6 +331,8 @@ void GetBalance(char* apiKey, char* code, char* codeOut, int* isRedeemable,
 }
 
 
+
+
 void Redeem(char* apiKey, char* code, int amountInCents, char* codeOut, 
 			int* balanceInCents, char* error, int* hasError)
 {
@@ -309,7 +345,7 @@ void Redeem(char* apiKey, char* code, int amountInCents, char* codeOut,
 	WriteLog(logFile, "AmountInCents", amountInCents);
 
 
-	string url = string("v1/vouchers/") + string(code) + string("/redeem.json?apikey=") + string(apiKey);
+	string url = string("v1/vouchers/") + CleanCode(code) + string("/redeem.json?apikey=") + string(apiKey);
 	char postData[1024];
 	sprintf(postData, "amount_in_cents=%i", amountInCents);
 	string json;
@@ -345,7 +381,7 @@ void CancelRedemption(char* apiKey, char* code, int amountInCents, char* codeOut
 	WriteLog(logFile, "AmountInCents", amountInCents);
 
 
-	string url = string("v1/vouchers/") + string(code) + string("/cancel_redemption.json?apikey=") + string(apiKey);
+	string url = string("v1/vouchers/") + CleanCode(code) + string("/cancel_redemption.json?apikey=") + string(apiKey);
 	char postData[1024];
 	sprintf(postData, "amount_in_cents=%i", amountInCents);
 	string json;
@@ -381,7 +417,7 @@ void DepotStatus(char* apiKey, char* code, int* amountInCents, int* canBeActivat
 	WriteLog(logFile, "Code", code);
 	
 
-	string url = string("v1/vouchers/") + string(code) + string("/depot_status.json?apikey=") + string(apiKey);
+	string url = string("v1/vouchers/") + CleanCode(code) + string("/depot_status.json?apikey=") + string(apiKey);
 	string json;
 
 	if (!SendHttpRequest(url, GET, NULL, json, error, logFile))
@@ -407,6 +443,7 @@ void DepotStatus(char* apiKey, char* code, int* amountInCents, int* canBeActivat
 	fclose(logFile);
 }
 
+
 void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char* error, int* hasError)
 {
 	*hasError = 0;
@@ -416,7 +453,7 @@ void Activate(char* apiKey, char* code, int* amountInCents, char* codeOut, char*
 	WriteLog(logFile, "API-Key", apiKey);
 	WriteLog(logFile, "Code", code);
 
-	string url = string("v1/vouchers/") + string(code) + string("/activate.json?apikey=") + string(apiKey);
+	string url = string("v1/vouchers/") + CleanCode(code) + string("/activate.json?apikey=") + string(apiKey);
 	string json;
 
 	if (!SendHttpRequest(url, POST, NULL, json, error, logFile))
@@ -448,7 +485,7 @@ void Deactivate(char* apiKey, char* code, int* amountInCents, char* codeOut, cha
 	WriteLog(logFile, "API-Key", apiKey);
 	WriteLog(logFile, "Code", code);
 
-	string url = string("v1/vouchers/") + string(code) + string("/deactivate.json?apikey=") + string(apiKey);
+	string url = string("v1/vouchers/") + CleanCode(code) + string("/deactivate.json?apikey=") + string(apiKey);
 	string json;
 
 	if (!SendHttpRequest(url, POST, NULL, json, error, logFile))

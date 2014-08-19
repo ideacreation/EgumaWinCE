@@ -1,12 +1,12 @@
-Dll Version: 1.0.0.0
-API-Key: 510e32c594d84816a4af9df0
-Code: 2QH3-QTDM-28N6
+Dll Version: 1.0.3.0
+API-Key: '510e32c594d84816a4af9df0'
+Code: '2QH3-QTDM-28N6 '
 InternetOpenA() succeeded
 InternetConnectA() succeeded
 HttpOpenRequestA() succeeded
 HttpSendRequestA() suceeded
-Status Code: 200
-Response Data: {"code":"2QH3QTDM28N6","is_redeemable":true,"balance_in_cents":3200,"total_amount_in_cents":5000,"message":"","book_as_discount":false}
-Balance in Cents: 3200
-Code out: 2QH3QTDM28N6
+Status Code: '200'
+Response Data: '{"code":"2QH3QTDM28N6","is_redeemable":true,"balance_in_cents":600,"total_amount_in_cents":5000,"message":"","book_as_discount":false}'
+Balance in Cents: '600'
+Code out: '2QH3QTDM28N6'
 Done!

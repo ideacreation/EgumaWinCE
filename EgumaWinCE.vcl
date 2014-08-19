@@ -3,38 +3,32 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: EgumaWinCE - Win32 (WCE x86) Debug--------------------
+--------------------Configuration: EgumaWinCE - Win32 (WCE ARMV4) Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPB2ED.tmp" with contents
+Creating command line "rc.exe /l 0x409 /fo"ARMV4Dbg/version.res" /d UNDER_CE=400 /d _WIN32_WCE=400 /d "DEBUG" /d "UNICODE" /d "_UNICODE" /d "WCE_PLATFORM_STANDARDSDK" /d "ARM" /d "_ARM_" /d "ARMV4" /r "D:\Projects\EgumaWinCE\version.rc"" 
+Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPAB23.tmp" with contents
 [
-/nologo /W3 /Zi /Od /D "DEBUG" /D _WIN32_WCE=400 /D "WCE_PLATFORM_STANDARDSDK" /D "_i386_" /D UNDER_CE=400 /D "UNICODE" /D "_UNICODE" /D "_X86_" /D "x86" /D "EGUMAWINCE_EXPORTS" /Fp"X86Dbg/EgumaWinCE.pch" /Yu"stdafx.h" /Fo"X86Dbg/" /Fd"X86Dbg/" /Gs8192 /GF /c 
+/nologo /W3 /GX- /Zi /Od /D "DEBUG" /D _WIN32_WCE=400 /D "WCE_PLATFORM_STANDARDSDK" /D "ARM" /D "_ARM_" /D "ARMV4" /D UNDER_CE=400 /D "UNICODE" /D "_UNICODE" /Fp"ARMV4Dbg/EgumaWinCE.pch" /YX /Fo"ARMV4Dbg/" /Fd"ARMV4Dbg/" /MC /c 
 "D:\Projects\EgumaWinCE\EgumaWinCE.cpp"
 ]
-Creating command line "cl.exe @C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPB2ED.tmp" 
-Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPB2EE.tmp" with contents
+Creating command line "clarm.exe @C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPAB23.tmp" 
+Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPAB24.tmp" with contents
 [
-commctrl.lib coredll.lib corelibc.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /incremental:yes /pdb:"X86Dbg/Eguma.pdb" /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:libc.lib /nodefaultlib:libcd.lib /nodefaultlib:libcmt.lib /nodefaultlib:libcmtd.lib /nodefaultlib:msvcrt.lib /nodefaultlib:msvcrtd.lib /out:"X86Dbg/Eguma.dll" /implib:"X86Dbg/Eguma.lib" /subsystem:windowsce,4.00 /MACHINE:IX86 
-.\X86Dbg\EgumaWinCE.obj
-.\X86Dbg\StdAfx.obj
-.\X86Dbg\version.res
+commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /incremental:yes /pdb:"ARMV4Dbg/Eguma.pdb" /debug /nodefaultlib:"libc.lib /nodefaultlib:libcd.lib /nodefaultlib:libcmt.lib /nodefaultlib:libcmtd.lib /nodefaultlib:msvcrt.lib /nodefaultlib:msvcrtd.lib" /out:"ARMV4Dbg/Eguma.dll" /implib:"ARMV4Dbg/Eguma.lib" /subsystem:windowsce,4.00 /align:"4096" /MACHINE:ARM 
+.\ARMV4Dbg\EgumaWinCE.obj
+.\ARMV4Dbg\StdAfx.obj
+.\ARMV4Dbg\version.res
 ]
-Creating command line "link.exe @C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPB2EE.tmp"
+Creating command line "link.exe @C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPAB24.tmp"
 <h3>Output Window</h3>
+Compiling resources...
 Compiling...
 EgumaWinCE.cpp
-C:\Program Files (x86)\Windows CE Tools\wce400\STANDARDSDK\Include\x86\xstring(724) : warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify -GX
-        C:\Program Files (x86)\Windows CE Tools\wce400\STANDARDSDK\Include\x86\xstring(720) : while compiling class-template member function 'void __thiscall std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >::_Copy(unsigned int)'
+c:\program files (x86)\windows ce tools\wce400\standardsdk\include\armv4\xstring(724) : warning C4530: C++ exception handler used, but unwind semantics are not enabled. Specify -GX
+        c:\program files (x86)\windows ce tools\wce400\standardsdk\include\armv4\xstring(720) : while compiling class-template member function 'void __cdecl std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >::_Copy(unsigned int)'
 Linking...
-Creating temporary file "C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPB4C3.bat" with contents
-[
-@echo off
-xcopy D:\Projects\EgumaWinCE\X86Dbg\Eguma.dll D:\Projects\EgumaWinCE\EgumaWinCETester\bin\Debug\Eguma.dll /Y
-]
-Creating command line "C:\Users\ADMINI~1\AppData\Local\Temp\2\RSPB4C3.bat"
-
-D:\Projects\EgumaWinCE\X86Dbg\Eguma.dll
-1 File(s) copied
+   Creating library ARMV4Dbg/Eguma.lib and object ARMV4Dbg/Eguma.exp
 
 
 

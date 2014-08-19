@@ -342,7 +342,7 @@ namespace EgumaCppLibTester
 			bool hasError = false;
 
 			GetBalance(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
-					   System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6"),
+					   System.Text.Encoding.ASCII.GetBytes("2QH3-QTDM-28N6 "),
 					   codeOut,
 					   out isRedeemable,
 					   out balanceInCents,
@@ -458,7 +458,7 @@ namespace EgumaCppLibTester
 			bool hasError;
 
 			Activate(System.Text.Encoding.ASCII.GetBytes("510e32c594d84816a4af9df0"), 
-				System.Text.Encoding.ASCII.GetBytes("EADS-HD24-AKS5"),
+				System.Text.Encoding.ASCII.GetBytes("EADS-HD24-AKS5 "),
 				out amountInCents,
 				codeOut,
 				error,
